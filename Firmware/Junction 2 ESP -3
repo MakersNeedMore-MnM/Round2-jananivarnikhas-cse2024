@@ -1,0 +1,255 @@
+#include <WiFi.h>
+#include <esp_now.h>
+
+const int RED_LED = 15;
+const int YELLOW_LED = 2;
+const int GREEN_LED = 4;
+
+const int ENTRY_IR = 5;
+const int EXIT_IR = 18;
+const int EMERGENCY_BUTTON = 19;
+const int ACCIDENT_BUTTON = 21;
+
+uint8_t A1_MAC[] = {0x20, 0x9B, 0xA9, 0x67, 0x9A, 0xDC};
+
+bool greenActive = false;
+unsigned long greenStart = 0;
+int greenDuration = 0;
+unsigned long lastEmergency = 0;
+unsigned long lastAccident = 0;
+bool ambulanceInside = false;
+bool passedSent = false;
+bool lastEntryState = HIGH;
+bool lastExitState = HIGH;
+
+void sendMessage(String msg) {
+  esp_now_send(A1_MAC, (uint8_t*)msg.c_str(), msg.length() + 1);
+  Serial.print("SEND A1: ");
+  Serial.println(msg);
+}
+
+void setRed() {
+  digitalWrite(RED_LED, HIGH);
+  digitalWrite(YELLOW_LED, LOW);
+  digitalWrite(GREEN_LED, LOW);
+
+}
+
+void setGreen() {
+  digitalWrite(RED_LED, LOW);
+  digitalWrite(YELLOW_LED, LOW);
+  digitalWrite(GREEN_LED, HIGH);
+
+}
+
+void setYellow() {
+  digitalWrite(RED_LED, LOW);
+  digitalWrite(YELLOW_LED, HIGH);
+  digitalWrite(GREEN_LED, LOW);
+
+}
+
+void startGreen(int seconds) {
+  if (seconds < 1) seconds = 1;
+
+  greenDuration = seconds;
+  greenStart = millis();
+  greenActive = true;
+  ambulanceInside = false;
+  passedSent = false;
+
+  setGreen();
+
+  sendMessage("J2_GREEN_STARTED," + String(seconds));
+
+  Serial.print("GREEN J2: ");
+  Serial.println(seconds);
+}
+
+void stopGreen() {
+  greenActive = false;
+  setRed();
+}
+
+void onReceive(const uint8_t *mac, const uint8_t *data, int len) {
+  String msg = "";
+
+  for (int i = 0; i < len; i++) {
+    msg += (char)data[i];
+  }
+
+  msg.trim();
+
+  Serial.print("FROM A1: ");
+  Serial.println(msg);
+
+  String prefix = "TIMED_GREEN_J2,";
+  if (msg.startsWith(prefix)) {
+    int seconds = msg.substring(prefix.length()).toInt();
+    startGreen(seconds);
+    return;
+  }
+
+  if (msg == "NORMAL_J2") {
+    stopGreen();
+    return;
+  }
+
+  if (msg == "BLOCKED_J2") {
+    stopGreen();
+    return;
+  }
+
+  if (msg == "ACCIDENT_J2") {
+    stopGreen();
+    return;
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  delay(500);
+
+  pinMode(RED_LED, OUTPUT);
+  pinMode(YELLOW_LED, OUTPUT);
+  pinMode(GREEN_LED, OUTPUT);
+
+
+  pinMode(ENTRY_IR, INPUT);
+  pinMode(EXIT_IR, INPUT);
+  pinMode(EMERGENCY_BUTTON, INPUT_PULLUP);
+  pinMode(ACCIDENT_BUTTON, INPUT_PULLUP);
+
+  setRed();
+
+  WiFi.mode(WIFI_STA);
+
+  Serial.print("J2 MAC: ");
+  Serial.println(WiFi.macAddress());
+
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("ESP-NOW INIT FAILED");
+    return;
+  }
+
+  esp_now_peer_info_t peer = {};
+  memcpy(peer.peer_addr, A1_MAC, 6);
+  peer.channel = 0;
+  peer.encrypt = false;
+
+  if (esp_now_add_peer(&peer) != ESP_OK) {
+    Serial.println("A1 PEER ADD FAILED");
+  } else {
+    Serial.println("A1 PEER READY");
+  }
+
+  esp_now_register_recv_cb(onReceive);
+
+  Serial.println("J2 READY");
+}
+
+void loop() {
+  
+  if (digitalRead(EMERGENCY_BUTTON) == LOW) {
+    if (millis() - lastEmergency > 1000) {
+      lastEmergency = millis();
+      sendMessage("EMERGENCY_J2");
+      Serial.println("EMERGENCY_J2");
+    }
+  }
+
+
+  
+  if (digitalRead(ACCIDENT_BUTTON) == LOW) {
+    if (millis() - lastAccident > 1000) {
+      lastAccident = millis();
+      sendMessage("ACCIDENT_J2");
+      setRed();
+      greenActive = false;
+      Serial.println("ACCIDENT_J2");
+    }
+  }
+
+
+  int entryState = digitalRead(ENTRY_IR);
+
+  if (entryState != lastEntryState) {
+    delay(5);
+    entryState = digitalRead(ENTRY_IR);
+
+    if (entryState != lastEntryState) {
+      lastEntryState = entryState;
+
+      if (entryState == LOW) {
+       
+        sendMessage("J2_TRAFFIC_ENTRY");
+        Serial.println("IR ENTRY DETECTED J2");
+
+       
+        if (greenActive) {
+          ambulanceInside = true;
+          Serial.println("AMBULANCE ENTRY J2");
+        }
+      }
+    }
+  }
+
+  int exitState = digitalRead(EXIT_IR);
+
+  if (exitState != lastExitState) {
+    delay(5);
+    exitState = digitalRead(EXIT_IR);
+
+    if (exitState != lastExitState) {
+      lastExitState = exitState;
+
+      if (exitState == LOW) {
+        
+        sendMessage("J2_TRAFFIC_EXIT");
+        Serial.println("IR EXIT DETECTED J2");
+
+        if (ambulanceInside && !passedSent) {
+          passedSent = true;
+          ambulanceInside = false;
+          sendMessage("J2_PASSED");
+          Serial.println("AMBULANCE PASSED J2");
+          stopGreen();
+        }
+      }
+    }
+  }
+
+  if (greenActive) {
+    unsigned long elapsed = (millis() - greenStart) / 1000;
+
+    if (elapsed >= (unsigned long)greenDuration) {
+      stopGreen();
+      Serial.println("GREEN TIME COMPLETE J2");
+    }
+  }
+
+  bool nearDetected = (digitalRead(ENTRY_IR) == LOW);
+  bool farDetected  = (digitalRead(EXIT_IR) == LOW);
+
+  String traffic;
+
+  if (nearDetected && farDetected) {
+    traffic = "HIGH";
+  } else if (nearDetected) {
+    traffic = "NEAR";
+  } else if (farDetected) {
+    traffic = "FAR";
+  } else {
+    traffic = "LOW";
+  }
+
+  static String lastTraffic = "";
+
+  if (traffic != lastTraffic) {
+    lastTraffic = traffic;
+    sendMessage("J2_TRAFFIC_" + traffic);
+  }
+
+
+  delay(50);
+}

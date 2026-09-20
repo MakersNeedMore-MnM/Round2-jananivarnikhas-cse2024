@@ -1,0 +1,3214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>LifeLane AI — Intelligent Emergency Corridor</title>
+
+<link rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<style>
+
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family:
+        Inter,
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    background:
+        radial-gradient(
+            circle at top left,
+            #142742,
+            #07111f 45%,
+            #050b14
+        );
+
+    color: #f4f8ff;
+}
+
+button {
+    font-family: inherit;
+}
+
+header {
+    height: 78px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 25px;
+
+    background: rgba(12,25,43,.94);
+
+    border-bottom:
+        1px solid #263d5a;
+
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+
+    backdrop-filter: blur(12px);
+}
+
+.logoArea {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+}
+
+.logo {
+    width: 45px;
+    height: 45px;
+
+    border-radius: 12px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #00d9ff,
+            #1677ff
+        );
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 24px;
+
+    box-shadow:
+        0 0 20px
+        rgba(0,217,255,.3);
+}
+
+header h1 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.subtitle {
+    color: #8298b3;
+    font-size: 12px;
+    margin-top: 3px;
+}
+
+.connection {
+    margin-left: auto;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.dot {
+    width: 9px;
+    height: 9px;
+
+    border-radius: 50%;
+
+    background: #00ff88;
+
+    box-shadow:
+        0 0 12px #00ff88;
+}
+
+.offline .dot {
+    background: #ff4058;
+    box-shadow: 0 0 12px #ff4058;
+}
+
+
+.dashboard {
+    padding: 16px;
+
+    display: grid;
+
+    grid-template-columns:
+        360px
+        minmax(450px, 1fr)
+        360px;
+
+    gap: 16px;
+
+    max-width: 1900px;
+
+    margin: auto;
+}
+
+.panel {
+    background:
+        rgba(13,29,49,.94);
+
+    border:
+        1px solid #263e5d;
+
+    border-radius: 15px;
+
+    padding: 15px;
+
+    box-shadow:
+        0 15px 40px
+        rgba(0,0,0,.2);
+}
+
+.sectionTitle {
+    font-size: 14px;
+
+    color: #8ea5c0;
+
+    text-transform: uppercase;
+
+    letter-spacing: 1px;
+
+    margin:
+        5px 0
+        11px;
+}
+
+
+.emergencyCard {
+    border-radius: 14px;
+
+    padding: 16px;
+
+    margin-bottom: 14px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #251622,
+            #111b2e
+        );
+
+    border:
+        1px solid #45334c;
+
+    transition: .3s;
+}
+
+.emergencyCard.active {
+    border-color: #ff4058;
+
+    box-shadow:
+        0 0 25px
+        rgba(255,64,88,.18);
+}
+
+.statusLabel {
+    font-size: 11px;
+
+    text-transform: uppercase;
+
+    letter-spacing: 1px;
+
+    color: #8499b4;
+}
+
+.statusMain {
+    font-size: 22px;
+
+    font-weight: 800;
+
+    margin-top: 5px;
+}
+
+.emergencyDetails {
+    margin-top: 14px;
+
+    display: grid;
+
+    gap: 8px;
+}
+
+.detail {
+    display: flex;
+
+    justify-content: space-between;
+
+    gap: 10px;
+
+    padding: 8px 10px;
+
+    background: #17263d;
+
+    border-radius: 8px;
+
+    font-size: 12px;
+}
+
+.detail span {
+    color: #8da2bb;
+}
+
+.detail strong {
+    color: #fff;
+}
+
+
+
+.aiEngine {
+    padding: 14px;
+
+    border-radius: 13px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #0b2034,
+            #101c31
+        );
+
+    border:
+        1px solid #284866;
+
+    margin-bottom: 14px;
+}
+
+.aiHeader {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-bottom: 12px;
+}
+
+.aiTitle {
+    font-size: 15px;
+
+    font-weight: bold;
+}
+
+.aiBadge {
+    font-size: 10px;
+
+    padding: 4px 8px;
+
+    border-radius: 20px;
+
+    background: #123d54;
+
+    color: #00d9ff;
+}
+
+.process {
+    display: grid;
+
+    gap: 7px;
+}
+
+.processStep {
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    padding: 8px;
+
+    border-radius: 8px;
+
+    background: #111f34;
+
+    color: #7086a0;
+
+    font-size: 12px;
+}
+
+.processStep.active {
+    color: #fff;
+
+    background:
+        linear-gradient(
+            90deg,
+            #153c52,
+            #14263e
+        );
+}
+
+.processStep.done {
+    color: #00ff88;
+}
+
+.stepIcon {
+    width: 24px;
+    height: 24px;
+
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #243851;
+}
+
+.active .stepIcon {
+    background: #087fa0;
+
+    animation:
+        pulse 1.2s infinite;
+}
+
+.done .stepIcon {
+    background: #145b42;
+}
+
+@keyframes pulse {
+
+    0%,100% {
+        box-shadow:
+            0 0 0 0
+            rgba(0,217,255,.4);
+    }
+
+    50% {
+        box-shadow:
+            0 0 0 7px
+            rgba(0,217,255,0);
+    }
+
+}
+
+
+
+.trafficGrid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3,1fr);
+
+    gap: 8px;
+
+    margin-bottom: 14px;
+}
+
+.trafficCard {
+    padding: 11px;
+
+    border-radius: 10px;
+
+    background: #121f34;
+
+    border:
+        1px solid #263c58;
+}
+
+.trafficName {
+    font-size: 11px;
+
+    color: #8da3bd;
+}
+
+.trafficValue {
+    font-size: 17px;
+
+    font-weight: bold;
+
+    margin-top: 5px;
+}
+
+.trafficBar {
+    height: 5px;
+
+    border-radius: 5px;
+
+    background: #25364d;
+
+    margin-top: 8px;
+
+    overflow: hidden;
+}
+
+.trafficFill {
+    height: 100%;
+
+    border-radius: 5px;
+
+    transition:
+        width .5s;
+}
+
+.low {
+    background: #00d084;
+}
+
+.medium {
+    background: #ffd84d;
+}
+
+.high {
+    background: #ff5268;
+}
+
+
+
+.timingCard {
+    padding: 12px;
+
+    border-radius: 10px;
+
+    background: #111f34;
+
+    border:
+        1px solid #283e5a;
+
+    margin-bottom: 7px;
+}
+
+.timingTop {
+    display: flex;
+
+    justify-content: space-between;
+
+    font-size: 12px;
+}
+
+.timingValue {
+    color: #00ff88;
+
+    font-size: 17px;
+
+    font-weight: bold;
+}
+
+.timingTrack {
+    height: 6px;
+
+    background: #26374d;
+
+    border-radius: 5px;
+
+    margin-top: 8px;
+}
+
+.timingProgress {
+    height: 100%;
+
+    background:
+        linear-gradient(
+            90deg,
+            #00d9ff,
+            #00ff88
+        );
+
+    border-radius: 5px;
+
+    transition:
+        width .5s;
+}
+
+
+
+.mapPanel {
+    padding: 12px;
+}
+
+.mapHeader {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-bottom: 10px;
+}
+
+.mapTitle {
+    font-size: 17px;
+
+    font-weight: bold;
+}
+
+.mapLive {
+    font-size: 10px;
+
+    color: #00ff88;
+
+    padding: 5px 8px;
+
+    border-radius: 20px;
+
+    background: #103c31;
+}
+
+#map {
+    width: 100%;
+
+    height: 590px;
+
+    border-radius: 12px;
+
+    overflow: hidden;
+
+    border:
+        1px solid #29445f;
+}
+
+.mapLegend {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    margin-top: 10px;
+
+    font-size: 10px;
+
+    color: #8ca2bb;
+}
+
+.legendItem {
+    padding: 5px 8px;
+
+    background: #132239;
+
+    border-radius: 7px;
+}
+
+
+.statusGrid {
+    display: grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap: 8px;
+
+    margin-bottom: 14px;
+}
+
+.metric {
+    padding: 12px;
+
+    background: #121f34;
+
+    border:
+        1px solid #283d58;
+
+    border-radius: 10px;
+}
+
+.metricLabel {
+    color: #8197b0;
+
+    font-size: 10px;
+
+    text-transform: uppercase;
+}
+
+.metricValue {
+    margin-top: 5px;
+
+    font-size: 17px;
+
+    font-weight: bold;
+}
+
+
+
+.routeBox {
+    padding: 13px;
+
+    border-radius: 10px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #101f34,
+            #132943
+        );
+
+    border:
+        1px solid #2a4c6c;
+
+    margin-bottom: 14px;
+}
+
+.routePoint {
+    display: inline-block;
+
+    padding: 7px 9px;
+
+    border-radius: 8px;
+
+    background: #243b58;
+
+    font-size: 11px;
+
+    margin: 2px;
+}
+
+.routePoint.active {
+    background: #155b68;
+
+    color: #8fffff;
+}
+
+.routeArrow {
+    color: #00d9ff;
+
+    font-weight: bold;
+
+    margin: 0 2px;
+}
+
+
+
+.feed {
+    max-height: 260px;
+
+    overflow-y: auto;
+}
+
+.event {
+    padding: 9px 4px;
+
+    border-bottom:
+        1px solid #263b55;
+
+    font-size: 11px;
+
+    line-height: 1.5;
+}
+
+.eventTime {
+    color: #00d9ff;
+
+    margin-right: 5px;
+}
+
+
+table {
+    width: 100%;
+
+    border-collapse:
+        collapse;
+}
+
+th,
+td {
+    padding: 8px 4px;
+
+    text-align: left;
+
+    border-bottom:
+        1px solid #263c58;
+
+    font-size: 11px;
+}
+
+th {
+    color: #8298b3;
+}
+
+.green {
+    color: #00ff88;
+}
+
+.red {
+    color: #ff5268;
+}
+
+.yellow {
+    color: #ffd84d;
+}
+
+.blue {
+    color: #00d9ff;
+}
+
+
+
+@media(max-width:1200px) {
+
+    .dashboard {
+        grid-template-columns:
+            320px 1fr;
+    }
+
+    .rightPanel {
+        grid-column:
+            1 / -1;
+
+        display: grid;
+
+        grid-template-columns:
+            1fr 1fr;
+
+        gap: 15px;
+    }
+
+}
+
+@media(max-width:850px) {
+
+    .dashboard {
+        grid-template-columns:
+            1fr;
+    }
+
+    .rightPanel {
+        grid-column:
+            auto;
+
+        display: block;
+    }
+
+    #map {
+        height: 500px;
+    }
+
+}
+
+
+:root{
+  --cyber-bg:#02060b;
+  --cyber-panel:rgba(5,14,24,.86);
+  --cyber-panel-2:rgba(8,20,33,.78);
+  --cyber-line:rgba(0,229,255,.20);
+  --cyan:#00e5ff;
+  --cyan2:#00a8ff;
+  --green:#00ff9d;
+  --red:#ff3158;
+  --amber:#ffc857;
+  --text:#e9fbff;
+  --muted:#6f8da5;
+}
+html,body{background:#02060b!important;color:var(--text)!important;}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 50% -10%,rgba(0,229,255,.10),transparent 32%),
+    radial-gradient(circle at 0 100%,rgba(0,255,157,.055),transparent 30%),
+    linear-gradient(135deg,#02060b 0%,#06101a 48%,#02060b 100%)!important;
+  overflow-x:hidden;
+}
+body:before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.12;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0,rgba(255,255,255,.035) 1px,transparent 1px,transparent 4px);
+  mix-blend-mode:screen;
+}
+body:after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:9998;
+  background-image:linear-gradient(rgba(0,229,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.025) 1px,transparent 1px);
+  background-size:42px 42px;
+  mask-image:linear-gradient(to bottom,rgba(0,0,0,.9),transparent 90%);
+}
+header{
+  height:82px!important;padding:0 28px!important;
+  background:rgba(2,9,16,.88)!important;
+  border-bottom:1px solid rgba(0,229,255,.22)!important;
+  box-shadow:0 0 35px rgba(0,229,255,.06),0 10px 35px rgba(0,0,0,.45)!important;
+}
+header:after{content:"COMMAND CENTER  //  ESP-NOW NETWORK  //  LIVE TELEMETRY";margin-left:28px;color:#3f7187;font:600 9px/1 Inter,Arial;letter-spacing:2px;opacity:.8;}
+.logo{
+  width:48px!important;height:48px!important;border-radius:14px!important;
+  background:linear-gradient(135deg,#001f2a,#003f55)!important;
+  border:1px solid rgba(0,229,255,.65)!important;
+  box-shadow:0 0 10px rgba(0,229,255,.45),inset 0 0 18px rgba(0,229,255,.16)!important;
+}
+.logoArea h1{font-size:21px!important;letter-spacing:.5px;text-shadow:0 0 14px rgba(0,229,255,.22);}
+.subtitle{color:#5e849b!important;letter-spacing:.8px!important;text-transform:uppercase;}
+.connection{padding:7px 11px;border:1px solid rgba(0,255,157,.25);border-radius:999px;background:rgba(0,255,157,.045);box-shadow:inset 0 0 14px rgba(0,255,157,.035);}
+.dashboard{padding:18px!important;gap:14px!important;max-width:1950px!important;}
+.panel{
+  position:relative;overflow:hidden;
+  background:linear-gradient(145deg,rgba(7,19,31,.90),rgba(2,9,16,.82))!important;
+  border:1px solid rgba(0,229,255,.17)!important;border-radius:14px!important;
+  box-shadow:0 18px 50px rgba(0,0,0,.46),inset 0 1px 0 rgba(255,255,255,.025),inset 0 0 30px rgba(0,229,255,.025)!important;
+  backdrop-filter:blur(18px)!important;
+}
+.panel:before{content:"";position:absolute;top:0;left:20px;right:20px;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.35;}
+.panel:after{content:"";position:absolute;right:0;bottom:0;width:55px;height:55px;border-right:1px solid rgba(0,229,255,.22);border-bottom:1px solid rgba(0,229,255,.22);opacity:.45;pointer-events:none;}
+.sectionTitle{color:#5f8ca4!important;font-size:10px!important;letter-spacing:2px!important;font-weight:700!important;}
+.emergencyCard{background:linear-gradient(135deg,rgba(35,8,18,.82),rgba(8,16,28,.82))!important;border-color:rgba(255,49,88,.24)!important;position:relative;}
+.emergencyCard:before{content:"PRIORITY CHANNEL";position:absolute;right:12px;top:10px;font:700 8px/1 Inter,Arial;letter-spacing:1.6px;color:#9c3e55;}
+.emergencyCard.active{border-color:rgba(255,49,88,.85)!important;box-shadow:0 0 32px rgba(255,49,88,.16),inset 0 0 24px rgba(255,49,88,.05)!important;animation:emergencyPulse 1.7s ease-in-out infinite;}
+@keyframes emergencyPulse{0%,100%{box-shadow:0 0 22px rgba(255,49,88,.10),inset 0 0 18px rgba(255,49,88,.03)}50%{box-shadow:0 0 42px rgba(255,49,88,.24),inset 0 0 28px rgba(255,49,88,.08)}}
+.statusLabel{color:#69869c!important;letter-spacing:1.8px!important;}
+.statusMain{letter-spacing:.4px;text-shadow:0 0 18px rgba(255,49,88,.18);}
+.detail,.metric,.trafficCard,.timingCard{background:rgba(8,22,36,.72)!important;border-color:rgba(0,229,255,.13)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.025);}
+.detail span,.metricLabel,.trafficName{color:#65859c!important;}
+.aiEngine{background:linear-gradient(145deg,rgba(2,30,43,.82),rgba(5,16,29,.84))!important;border-color:rgba(0,229,255,.25)!important;box-shadow:inset 0 0 28px rgba(0,229,255,.035);}
+.aiTitle{letter-spacing:.3px;}.aiBadge{background:rgba(0,229,255,.08)!important;border:1px solid rgba(0,229,255,.18);box-shadow:0 0 15px rgba(0,229,255,.08);}
+.processStep{background:rgba(4,14,25,.76)!important;border:1px solid rgba(0,229,255,.06);}
+.processStep.active{background:linear-gradient(90deg,rgba(0,112,145,.25),rgba(8,24,39,.65))!important;border-color:rgba(0,229,255,.25);}
+.processStep.done{color:var(--green)!important;}
+.trafficCard{transition:.25s ease;}.trafficCard:hover,.timingCard:hover,.metric:hover{transform:translateY(-2px);border-color:rgba(0,229,255,.30)!important;box-shadow:0 0 22px rgba(0,229,255,.07),inset 0 0 18px rgba(0,229,255,.025);}
+.trafficBar,.timingTrack{background:#071521!important;border:1px solid rgba(0,229,255,.08);}
+.trafficFill.low{background:linear-gradient(90deg,#00a879,#00ff9d)!important;box-shadow:0 0 9px rgba(0,255,157,.35);}
+.trafficFill.medium{background:linear-gradient(90deg,#ff9f1a,#ffd166)!important;box-shadow:0 0 9px rgba(255,209,102,.25);}
+.trafficFill.high{background:linear-gradient(90deg,#ff1744,#ff5c77)!important;box-shadow:0 0 10px rgba(255,49,88,.4);}
+.timingValue{color:var(--green)!important;text-shadow:0 0 10px rgba(0,255,157,.25);}
+.timingProgress{box-shadow:0 0 12px rgba(0,229,255,.25);}
+.mapPanel{padding:12px!important;}
+.mapHeader{padding:2px 2px 8px;}.mapTitle{font-size:16px!important;letter-spacing:.4px;}.mapLive{border:1px solid rgba(0,255,157,.20);box-shadow:0 0 16px rgba(0,255,157,.08);}
+#map{height:610px!important;border:1px solid rgba(0,229,255,.25)!important;border-radius:10px!important;box-shadow:0 0 30px rgba(0,229,255,.08),inset 0 0 30px rgba(0,0,0,.35);position:relative;}
+#map:after{content:"TACTICAL MAP // CHENNAI";position:absolute;z-index:500;left:12px;top:10px;padding:5px 8px;background:rgba(2,8,14,.72);border:1px solid rgba(0,229,255,.20);color:#65a6ba;font:700 8px/1 Inter,Arial;letter-spacing:1.5px;pointer-events:none;}
+.leaflet-tile-pane{filter:brightness(.42) saturate(.72) contrast(1.22) hue-rotate(155deg);}
+.leaflet-control-zoom a,.leaflet-control-attribution{background:rgba(3,11,18,.82)!important;color:#6f9bae!important;border-color:rgba(0,229,255,.15)!important;}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#07131f!important;color:#dffaff!important;border:1px solid rgba(0,229,255,.2);box-shadow:0 0 25px rgba(0,229,255,.12);}
+.leaflet-popup-content{font-size:11px;}
+.mapLegend{border-top:1px solid rgba(0,229,255,.10);padding-top:9px;}.legendItem{background:rgba(5,18,30,.78)!important;border:1px solid rgba(0,229,255,.09);}
+.routeBox{background:linear-gradient(135deg,rgba(0,45,61,.25),rgba(7,18,31,.72))!important;border-color:rgba(0,229,255,.20)!important;box-shadow:inset 0 0 20px rgba(0,229,255,.025);}
+.routePoint{background:rgba(11,43,62,.85)!important;border:1px solid rgba(0,229,255,.13);}.routePoint.active{background:rgba(0,125,145,.25)!important;color:#8ff8ff!important;box-shadow:0 0 12px rgba(0,229,255,.10);}.routeArrow{color:var(--cyan)!important;text-shadow:0 0 8px rgba(0,229,255,.6);}
+table{background:rgba(3,12,21,.32);border-radius:8px;overflow:hidden;}th,td{border-bottom-color:rgba(0,229,255,.08)!important;}th{color:#537b90!important;text-transform:uppercase;font-size:9px;letter-spacing:1px;}td{color:#c9e4ed;}
+.green{color:var(--green)!important;text-shadow:0 0 9px rgba(0,255,157,.25);}.red{color:#ff5574!important;text-shadow:0 0 9px rgba(255,49,88,.25);}.yellow{color:#ffd166!important;}.blue{color:var(--cyan)!important;}
+.feed{background:rgba(0,0,0,.18);border:1px solid rgba(0,229,255,.08);border-radius:8px;padding:3px 9px;box-shadow:inset 0 0 20px rgba(0,0,0,.25);font-family:"JetBrains Mono","Consolas",monospace;}
+.event{border-bottom-color:rgba(0,229,255,.07)!important;color:#9bc4d0;}.eventTime{color:var(--cyan)!important;}
+.rightPanel .metricValue{font-size:15px!important;}.rightPanel{min-height:100%;}
+.dot{animation:dotPulse 1.4s ease-in-out infinite;}@keyframes dotPulse{50%{transform:scale(1.25);box-shadow:0 0 20px currentColor;}}
+@media(max-width:1200px){header:after{display:none;}#map{height:560px!important;}}
+@media(max-width:850px){header{padding:0 14px!important}.dashboard{padding:10px!important}.panel{border-radius:12px!important}#map{height:480px!important;}}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<header>
+
+    <div class="logoArea">
+
+        <div class="logo">
+            🚑
+        </div>
+
+        <div>
+
+            <h1>
+                LifeLane AI <span style="color:#00e5ff;font-size:.55em;letter-spacing:2px;vertical-align:middle">COMMAND CENTER</span>
+            </h1>
+
+            <div class="subtitle">
+                Predictive Emergency Traffic Management
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div id="connection"
+         class="connection">
+
+        <span class="dot"></span>
+
+        <span id="connectionText">
+            CONNECTING
+        </span>
+
+    </div>
+
+</header>
+
+
+
+<div class="dashboard">
+
+
+
+<div class="panel">
+
+
+
+    <div id="emergencyCard"
+         class="emergencyCard">
+
+        <div class="statusLabel">
+            Emergency Command
+        </div>
+
+        <div id="emergencyStatus"
+             class="statusMain">
+
+            Waiting for emergency
+
+        </div>
+
+
+        <div class="emergencyDetails">
+
+            <div class="detail">
+
+                <span>
+                    Source
+                </span>
+
+                <strong id="source">
+                    —
+                </strong>
+
+            </div>
+
+
+            <div class="detail">
+
+                <span>
+                    Emergency House
+                </span>
+
+                <strong id="house">
+                    —
+                </strong>
+
+            </div>
+
+
+            <div class="detail">
+
+                <span>
+                    Ambulance
+                </span>
+
+                <strong id="ambulance">
+                    A1
+                </strong>
+
+            </div>
+
+
+            <div class="detail">
+
+                <span>
+                    Hospital
+                </span>
+
+                <strong id="hospital">
+                    —
+                </strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+
+    <div class="aiEngine">
+
+        <div class="aiHeader">
+
+            <div class="aiTitle">
+                🧠 AI Corridor Engine
+            </div>
+
+            <div id="aiBadge"
+                 class="aiBadge">
+                STANDBY
+            </div>
+
+        </div>
+
+
+        <div class="process">
+
+
+            <div id="step1"
+                 class="processStep">
+
+                <div class="stepIcon">
+                    1
+                </div>
+
+                <span>
+                    Detect emergency source
+                </span>
+
+            </div>
+
+
+            <div id="step2"
+                 class="processStep">
+
+                <div class="stepIcon">
+                    2
+                </div>
+
+                <span>
+                    Calculate emergency route
+                </span>
+
+            </div>
+
+
+            <div id="step3"
+                 class="processStep">
+
+                <div class="stepIcon">
+                    3
+                </div>
+
+                <span>
+                    Analyze IR traffic
+                </span>
+
+            </div>
+
+
+            <div id="step4"
+                 class="processStep">
+
+                <div class="stepIcon">
+                    4
+                </div>
+
+                <span>
+                    Calculate signal timings
+                </span>
+
+            </div>
+
+
+            <div id="step5"
+                 class="processStep">
+
+                <div class="stepIcon">
+                    ✓
+                </div>
+
+                <span>
+                    Emergency corridor ready
+                </span>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <div class="sectionTitle">
+        Live Traffic Analysis
+    </div>
+
+
+    <div class="trafficGrid">
+
+
+        <div class="trafficCard">
+
+            <div class="trafficName">
+                J1
+            </div>
+
+            <div id="trafficJ1"
+                 class="trafficValue">
+                NORMAL
+            </div>
+
+            <div class="trafficBar">
+
+                <div id="barJ1"
+                     class="trafficFill low"
+                     style="width:20%">
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="trafficCard">
+
+            <div class="trafficName">
+                J2
+            </div>
+
+            <div id="trafficJ2"
+                 class="trafficValue">
+                NORMAL
+            </div>
+
+            <div class="trafficBar">
+
+                <div id="barJ2"
+                     class="trafficFill low"
+                     style="width:20%">
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="trafficCard">
+
+            <div class="trafficName">
+                J3
+            </div>
+
+            <div id="trafficJ3"
+                 class="trafficValue">
+                NORMAL
+            </div>
+
+            <div class="trafficBar">
+
+                <div id="barJ3"
+                     class="trafficFill low"
+                     style="width:20%">
+                </div>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+
+    <div class="sectionTitle">
+        Adaptive Signal Timing
+    </div>
+
+
+    <div id="timings">
+
+        <div class="timingCard">
+
+            <div class="timingTop">
+
+                <span>
+                    J1
+                </span>
+
+                <span id="timeJ1"
+                      class="timingValue">
+                    30 sec
+                </span>
+
+            </div>
+
+            <div class="timingTrack">
+
+                <div id="timeBarJ1"
+                     class="timingProgress"
+                     style="width:50%">
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="timingCard">
+
+            <div class="timingTop">
+
+                <span>
+                    J2
+                </span>
+
+                <span id="timeJ2"
+                      class="timingValue">
+                    30 sec
+                </span>
+
+            </div>
+
+            <div class="timingTrack">
+
+                <div id="timeBarJ2"
+                     class="timingProgress"
+                     style="width:50%">
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="timingCard">
+
+            <div class="timingTop">
+
+                <span>
+                    J3
+                </span>
+
+                <span id="timeJ3"
+                      class="timingValue">
+                    30 sec
+                </span>
+
+            </div>
+
+            <div class="timingTrack">
+
+                <div id="timeBarJ3"
+                     class="timingProgress"
+                     style="width:50%">
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="sectionTitle">
+        Junction Network
+    </div>
+
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>
+                    Junction
+                </th>
+
+                <th>
+                    Signal
+                </th>
+
+                <th>
+                    Time
+                </th>
+
+                <th>
+                    IR
+                </th>
+
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+            <tr>
+
+                <td>
+                    J1
+                </td>
+
+                <td id="signalJ1"
+                    class="red">
+                    RED
+                </td>
+
+                <td id="actualTimeJ1">
+                    0
+                </td>
+
+                <td id="irJ1">
+                    —
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    J2
+                </td>
+
+                <td id="signalJ2"
+                    class="red">
+                    RED
+                </td>
+
+                <td id="actualTimeJ2">
+                    0
+                </td>
+
+                <td id="irJ2">
+                    —
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    J3
+                </td>
+
+                <td id="signalJ3"
+                    class="red">
+                    RED
+                </td>
+
+                <td id="actualTimeJ3">
+                    0
+                </td>
+
+                <td id="irJ3">
+                    —
+                </td>
+
+            </tr>
+
+        </tbody>
+
+    </table>
+
+
+</div>
+
+
+
+
+<div class="panel mapPanel">
+
+
+    <div class="mapHeader">
+
+        <div>
+
+            <div class="mapTitle">
+                Chennai Emergency Corridor
+            </div>
+
+            <div class="subtitle">
+                Real-time IoT network visualization
+            </div>
+
+        </div>
+
+
+        <div class="mapLive">
+            <span style="text-shadow:0 0 10px #00ff9d">●</span> LIVE / LINKED
+        </div>
+
+    </div>
+
+
+    <div id="map"></div>
+
+
+    <div class="mapLegend">
+
+        <div class="legendItem">
+            🚑 Ambulance
+        </div>
+
+        <div class="legendItem">
+            🚦 Active junction
+        </div>
+
+        <div class="legendItem">
+            🏥 Hospital
+        </div>
+
+        <div class="legendItem">
+            🚧 Blocked
+        </div>
+
+        <div class="legendItem">
+            ⚫ OSM facilities
+        </div>
+
+    </div>
+
+
+
+    <div class="sectionTitle"
+         style="margin-top:16px">
+
+        Calculated Emergency Route
+
+    </div>
+
+
+    <div id="routeBox"
+         class="routeBox">
+
+        Waiting for emergency...
+
+    </div>
+
+
+</div>
+
+
+
+
+<div class="panel rightPanel">
+
+
+    <div>
+
+        <div class="sectionTitle">
+            Mission Status
+        </div>
+
+
+        <div class="statusGrid">
+
+
+            <div class="metric">
+
+                <div class="metricLabel">
+                    System
+                </div>
+
+                <div id="systemStatus"
+                     class="metricValue">
+                    READY
+                </div>
+
+            </div>
+
+
+            <div class="metric">
+
+                <div class="metricLabel">
+                    Ambulance
+                </div>
+
+                <div id="selectedAmbulance"
+                     class="metricValue">
+                    A1
+                </div>
+
+            </div>
+
+
+            <div class="metric">
+
+                <div class="metricLabel">
+                    Hospital
+                </div>
+
+                <div id="selectedHospital"
+                     class="metricValue">
+                    —
+                </div>
+
+            </div>
+
+
+            <div class="metric">
+
+                <div class="metricLabel">
+                    Blocked
+                </div>
+
+                <div id="blocked"
+                     class="metricValue">
+                    None
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+
+        <div class="sectionTitle">
+            AI Decision
+        </div>
+
+
+        <div class="routeBox">
+
+            <div class="detail">
+
+                <span>
+                    Route distance
+                </span>
+
+                <strong id="routeDistance">
+                    —
+                </strong>
+
+            </div>
+
+
+            <div class="detail">
+
+                <span>
+                    Estimated ETA
+                </span>
+
+                <strong id="eta">
+                    —
+                </strong>
+
+            </div>
+
+
+            <div class="detail">
+
+                <span>
+                    Traffic condition
+                </span>
+
+                <strong id="overallTraffic">
+                    —
+                </strong>
+
+            </div>
+
+
+            <div class="detail">
+
+                <span>
+                    Corridor status
+                </span>
+
+                <strong id="corridorStatus">
+                    Standby
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <!-- AVAILABLE PLACES -->
+
+        <div class="sectionTitle">
+            City Network
+        </div>
+
+
+        <div class="statusGrid">
+
+
+            <div class="metric">
+
+                <div class="metricLabel">
+                    Hospitals
+                </div>
+
+                <div id="hospitalCount"
+                     class="metricValue">
+                    —
+                </div>
+
+            </div>
+
+
+            <div class="metric">
+
+                <div class="metricLabel">
+                    Traffic Signals
+                </div>
+
+                <div id="signalCount"
+                     class="metricValue">
+                    —
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="sectionTitle">
+            Live IoT Events
+        </div>
+
+
+        <div id="feed"
+             class="feed">
+
+            Waiting for physical events...
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+</div>
+
+
+
+<script
+src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
+
+<script>
+
+
+let map;
+
+let projectPoints = {};
+
+let projectMarkers = {};
+
+let osmHospitals = [];
+
+let osmSignals = [];
+
+let hospitalMarkers = [];
+
+let signalMarkers = [];
+
+let routeLine = null;
+
+let routeFallbackLine = null;
+
+let lastRouteKey = "";
+
+let lastEmergencySource = null;
+
+let calculationStart = 0;
+
+
+
+const EMERGENCY_MAP = {
+
+    J1: {
+
+        house: "HOUSE_1",
+
+        houseName: "House 1",
+
+        hospital: "HOSPITAL_1",
+
+        hospitalName: "Hospital 1",
+
+        route: [
+            "HOUSE_1",
+            "J1",
+            "J2",
+            "HOSPITAL_1"
+        ],
+
+        junctions: [
+            "J1",
+            "J2"
+        ]
+
+    },
+
+
+    J2: {
+
+        house: "HOUSE_2",
+
+        houseName: "House 2",
+
+        hospital: "HOSPITAL_1",
+
+        hospitalName: "Hospital 1",
+
+        route: [
+            "HOUSE_2",
+            "J2",
+            "HOSPITAL_1"
+        ],
+
+        junctions: [
+            "J2"
+        ]
+
+    },
+
+
+    J3: {
+
+        house: "HOUSE_3",
+
+        houseName: "House 3",
+
+        hospital: "HOSPITAL_2",
+
+        hospitalName: "Hospital 2",
+
+        route: [
+            "HOUSE_3",
+            "J3",
+            "HOSPITAL_2"
+        ],
+
+        junctions: [
+            "J3"
+        ]
+
+    }
+
+};
+
+
+
+
+function makeIcon(symbol, bg) {
+
+    return L.divIcon({
+
+        className: "",
+
+        html:
+
+        `<div style="
+            width:35px;
+            height:35px;
+            border-radius:50%;
+            background:${bg};
+            border:3px solid white;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:18px;
+            box-shadow:0 2px 9px #000;
+        ">${symbol}</div>`,
+
+        iconSize: [35,35],
+
+        iconAnchor: [17,17]
+
+    });
+
+}
+
+
+const icons = {
+
+    house:
+        makeIcon("🏠","#4b5563"),
+
+    ambulance:
+        makeIcon("🚑","#1677ff"),
+
+    selectedAmbulance:
+        makeIcon("🚑","#00b7ff"),
+
+    junction:
+        makeIcon("🚦","#f59e0b"),
+
+    selectedJunction:
+        makeIcon("🚦","#ff7a00"),
+
+    blockedJunction:
+        makeIcon("🚧","#ef4444"),
+
+    hospital:
+        makeIcon("🏥","#8b5cf6"),
+
+    selectedHospital:
+        makeIcon("🏥","#c026d3")
+
+};
+
+
+
+
+function initMap() {
+
+    map =
+        L.map("map")
+        .setView(
+            [13.035,80.22],
+            12
+        );
+
+
+    L.tileLayer(
+
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+
+        {
+
+            maxZoom:19,
+
+            attribution:
+                "Esri | OpenStreetMap contributors"
+
+        }
+
+    ).addTo(map);
+
+}
+
+
+
+
+async function loadMapData() {
+
+    try {
+
+        const p =
+            await fetch(
+                "/api/project-points?x="+Date.now()
+            );
+
+        projectPoints =
+            await p.json();
+
+
+        Object.entries(projectPoints)
+        .forEach(([id,p]) => {
+
+            const marker =
+                L.marker(
+                    [p.lat,p.lon],
+                    {
+                        icon:
+                            icons[p.kind] ||
+                            icons.junction
+                    }
+                )
+                .addTo(map)
+                .bindPopup(
+                    `<b>${p.name}</b><br>ID: ${id}`
+                );
+
+
+            projectMarkers[id] =
+                marker;
+
+        });
+
+    }
+
+    catch(e) {
+
+        console.error(e);
+
+    }
+
+
+
+    try {
+
+        const r =
+            await fetch(
+                "/api/places?x="+Date.now()
+            );
+
+        const d =
+            await r.json();
+
+
+        osmHospitals =
+            d.hospitals || [];
+
+
+        osmSignals =
+            d.signals || [];
+
+
+        osmHospitals.forEach(h => {
+
+            const m =
+                L.circleMarker(
+                    [h.lat,h.lon],
+                    {
+                        radius:5,
+                        weight:1,
+                        fillOpacity:.8
+                    }
+                )
+                .addTo(map)
+                .bindPopup(
+                    `<b>Hospital</b><br>${h.name}`
+                );
+
+            hospitalMarkers.push(m);
+
+        });
+
+
+        osmSignals.forEach(s => {
+
+            const m =
+                L.circleMarker(
+                    [s.lat,s.lon],
+                    {
+                        radius:3,
+                        weight:1,
+                        fillOpacity:.7
+                    }
+                )
+                .addTo(map)
+                .bindPopup(
+                    `<b>Traffic Signal</b><br>${s.name}`
+                );
+
+            signalMarkers.push(m);
+
+        });
+
+
+        document.getElementById(
+            "hospitalCount"
+        ).textContent =
+            osmHospitals.length;
+
+
+        document.getElementById(
+            "signalCount"
+        ).textContent =
+            osmSignals.length;
+
+    }
+
+    catch(e) {
+
+        console.error(e);
+
+    }
+
+}
+
+
+
+
+function getSource(data) {
+
+    let s =
+        data.emergency?.source ||
+        data.last_event?.value ||
+        "";
+
+
+    s =
+        String(s)
+        .toUpperCase();
+
+
+    if(s.includes("J1"))
+        return "J1";
+
+
+    if(s.includes("J2"))
+        return "J2";
+
+
+    if(s.includes("J3"))
+        return "J3";
+
+
+    return null;
+
+}
+
+
+
+
+function getEmergencyInfo(data) {
+
+    const source =
+        getSource(data);
+
+
+    if(!source) {
+
+        return {
+
+            source:null,
+
+            house:"—",
+
+            houseName:"—",
+
+            hospital:"—",
+
+            hospitalName:"—",
+
+            route:[],
+
+            junctions:[]
+
+        };
+
+    }
+
+
+    return {
+
+        source,
+
+        ...EMERGENCY_MAP[source]
+
+    };
+
+}
+
+
+
+
+function calculateTraffic(junction) {
+
+    if(!junction)
+        return {
+            level:"NORMAL",
+            score:20
+        };
+
+
+    let score = 20;
+
+
+    const traffic =
+        String(
+            junction.traffic || ""
+        ).toUpperCase();
+
+
+    if(
+        traffic.includes("HIGH") ||
+        traffic.includes("HEAVY")
+    ) {
+
+        score = 85;
+
+    }
+
+    else if(
+        traffic.includes("MEDIUM") ||
+        traffic.includes("MODERATE")
+    ) {
+
+        score = 55;
+
+    }
+
+    else if(
+        traffic.includes("LOW")
+    ) {
+
+        score = 25;
+
+    }
+
+
+    if(
+        junction.last_ir_event ===
+        "ENTRY"
+    ) {
+
+        score += 10;
+
+    }
+
+
+    score =
+        Math.min(
+            100,
+            score
+        );
+
+
+    let level =
+        score >= 70
+            ? "HIGH"
+            : score >= 40
+                ? "MEDIUM"
+                : "LOW";
+
+
+    return {
+        level,
+        score
+    };
+
+}
+
+
+
+
+function calculateTiming(
+    traffic,
+    selected
+) {
+
+
+    let seconds;
+
+
+    if(selected) {
+
+        if(traffic === "HIGH")
+            seconds = 30;
+
+        else if(traffic === "MEDIUM")
+            seconds = 25;
+
+        else
+            seconds = 15;
+
+    }
+
+    else {
+
+        if(traffic === "HIGH")
+            seconds = 45;
+
+        else if(traffic === "MEDIUM")
+            seconds = 35;
+
+        else
+            seconds = 30;
+
+    }
+
+
+    return seconds;
+
+}
+
+
+function distanceKm(a,b) {
+
+    if(!a || !b)
+        return 0;
+
+
+    const R = 6371;
+
+
+    const dLat =
+        (b.lat-a.lat) *
+        Math.PI / 180;
+
+
+    const dLon =
+        (b.lon-a.lon) *
+        Math.PI / 180;
+
+
+    const x =
+        Math.sin(dLat/2) *
+        Math.sin(dLat/2) +
+
+        Math.cos(
+            a.lat *
+            Math.PI/180
+        ) *
+
+        Math.cos(
+            b.lat *
+            Math.PI/180
+        ) *
+
+        Math.sin(dLon/2) *
+        Math.sin(dLon/2);
+
+
+    return (
+
+        R *
+        2 *
+        Math.atan2(
+            Math.sqrt(x),
+            Math.sqrt(1-x)
+        )
+
+    );
+
+}
+
+
+
+
+function calculateRouteDistance(route) {
+
+    let total = 0;
+
+
+    for(
+        let i=0;
+        i<route.length-1;
+        i++
+    ) {
+
+        total +=
+            distanceKm(
+                projectPoints[route[i]],
+                projectPoints[route[i+1]]
+            );
+
+    }
+
+
+    return total;
+
+}
+
+
+
+function updateTrafficUI(
+    data,
+    selectedJunctions
+) {
+
+
+    ["J1","J2","J3"]
+    .forEach(j => {
+
+
+        const result =
+            calculateTraffic(
+                data.junctions?.[j]
+            );
+
+
+        const label =
+            document.getElementById(
+                "traffic"+j
+            );
+
+
+        const bar =
+            document.getElementById(
+                "bar"+j
+            );
+
+
+        label.textContent =
+            result.level;
+
+
+        bar.style.width =
+            result.score+"%";
+
+
+        bar.className =
+            "trafficFill " +
+
+            (
+                result.level === "HIGH"
+                    ? "high"
+                    : result.level === "MEDIUM"
+                        ? "medium"
+                        : "low"
+            );
+
+    });
+
+}
+
+function updateTimings(
+    data,
+    selectedJunctions
+) {
+
+
+    ["J1","J2","J3"]
+    .forEach(j => {
+
+
+        const traffic =
+            calculateTraffic(
+                data.junctions?.[j]
+            );
+
+
+        const selected =
+            selectedJunctions
+                .includes(j);
+
+
+        const seconds =
+            calculateTiming(
+                traffic.level,
+                selected
+            );
+
+
+        document.getElementById(
+            "time"+j
+        ).textContent =
+            seconds+" sec";
+
+
+        document.getElementById(
+            "timeBar"+j
+        ).style.width =
+            Math.min(
+                100,
+                seconds / 45 * 100
+            )+"%";
+
+    });
+
+}
+
+
+
+function updateJunctionTable(data) {
+
+    ["J1","J2","J3"]
+    .forEach(j => {
+
+
+        const d =
+            data.junctions?.[j];
+
+
+        if(!d)
+            return;
+
+
+        const signal =
+            document.getElementById(
+                "signal"+j
+            );
+
+
+        signal.textContent =
+            d.signal || "RED";
+
+
+        signal.className =
+            d.signal === "GREEN"
+                ? "green"
+                : d.signal === "YELLOW"
+                    ? "yellow"
+                    : "red";
+
+
+        document.getElementById(
+            "actualTime"+j
+        ).textContent =
+            d.time ?? 0;
+
+
+        document.getElementById(
+            "ir"+j
+        ).textContent =
+            d.last_ir_event
+                ? d.last_ir_event
+                : "—";
+
+    });
+
+}
+
+
+
+function updateCalculationEngine(
+    active
+) {
+
+    const steps = [
+
+        "step1",
+        "step2",
+        "step3",
+        "step4",
+        "step5"
+
+    ];
+
+
+    steps.forEach(
+        id => {
+
+            document.getElementById(
+                id
+            ).className =
+                "processStep";
+
+        }
+    );
+
+
+    if(!active) {
+
+        document.getElementById(
+            "aiBadge"
+        ).textContent =
+            "STANDBY";
+
+        return;
+
+    }
+
+
+    const elapsed =
+        Date.now() -
+        calculationStart;
+
+
+    let stage;
+
+
+    if(elapsed < 1000)
+        stage = 1;
+
+    else if(elapsed < 2000)
+        stage = 2;
+
+    else if(elapsed < 3000)
+        stage = 3;
+
+    else if(elapsed < 4000)
+        stage = 4;
+
+    else
+        stage = 5;
+
+
+    for(
+        let i=1;
+        i<=5;
+        i++
+    ) {
+
+        const element =
+            document.getElementById(
+                "step"+i
+            );
+
+
+        if(i < stage)
+            element.classList.add(
+                "done"
+            );
+
+        else if(i === stage)
+            element.classList.add(
+                "active"
+            );
+
+    }
+
+
+    const badge =
+        document.getElementById(
+            "aiBadge"
+        );
+
+
+    badge.textContent =
+
+        stage === 1
+            ? "DETECTING"
+            : stage === 2
+                ? "ROUTING"
+                : stage === 3
+                    ? "ANALYZING"
+                    : stage === 4
+                        ? "OPTIMIZING"
+                        : "READY";
+
+}
+
+
+
+function updateRouteUI(info) {
+
+    const box =
+        document.getElementById(
+            "routeBox"
+        );
+
+
+    if(!info.route.length) {
+
+        box.textContent =
+            "Waiting for emergency...";
+
+        return;
+
+    }
+
+
+    box.innerHTML =
+
+        info.route
+        .map(
+            (p,i) =>
+
+                `<span class="routePoint
+                    ${i === 0 ? "active":""}">
+                    ${p}
+                 </span>`
+
+        )
+        .join(
+
+            `<span class="routeArrow">
+                →
+             </span>`
+
+        );
+
+}
+
+
+
+function updateMarkers(
+    data,
+    info
+) {
+
+
+    Object.entries(
+        projectPoints
+    )
+    .forEach(
+        ([id,p]) => {
+
+
+            const marker =
+                projectMarkers[id];
+
+
+            if(!marker)
+                return;
+
+
+            let icon =
+                icons[p.kind] ||
+                icons.junction;
+
+
+            if(
+                p.kind === "ambulance" &&
+                data.selected_ambulance === id
+            ) {
+
+                icon =
+                    icons.selectedAmbulance;
+
+            }
+
+
+            if(
+                p.kind === "hospital" &&
+                info.hospital === id
+            ) {
+
+                icon =
+                    icons.selectedHospital;
+
+            }
+
+
+            if(
+                p.kind === "junction"
+            ) {
+
+
+                if(
+                    data.junctions?.[id]?.blocked
+                ) {
+
+                    icon =
+                        icons.blockedJunction;
+
+                }
+
+                else if(
+                    info.junctions
+                    .includes(id)
+                ) {
+
+                    icon =
+                        icons.selectedJunction;
+
+                }
+
+            }
+
+
+            marker.setIcon(icon);
+
+        }
+    );
+
+}
+
+
+
+
+async function drawRoute(info) {
+
+
+    if(info.route.length < 2)
+        return;
+
+
+    const coordinates =
+        info.route
+        .map(
+            id =>
+                projectPoints[id]
+        )
+        .filter(Boolean);
+
+
+    if(coordinates.length < 2)
+        return;
+
+
+    const key =
+        info.route.join(">");
+
+
+    if(key === lastRouteKey)
+        return;
+
+
+    lastRouteKey = key;
+
+
+    if(routeLine) {
+
+        map.removeLayer(
+            routeLine
+        );
+
+        routeLine = null;
+
+    }
+
+
+    if(routeFallbackLine) {
+
+        map.removeLayer(
+            routeFallbackLine
+        );
+
+        routeFallbackLine = null;
+
+    }
+
+
+    const coords =
+        coordinates
+        .map(
+            p =>
+                `${p.lon},${p.lat}`
+        )
+        .join(";");
+
+
+    try {
+
+
+        const url =
+
+            "https://router.project-osrm.org/route/v1/driving/" +
+
+            coords +
+
+            "?overview=full&geometries=geojson";
+
+
+        const response =
+            await fetch(url);
+
+
+        const result =
+            await response.json();
+
+
+        if(
+            result.routes &&
+            result.routes.length
+        ) {
+
+
+            routeLine =
+                L.geoJSON(
+                    result.routes[0].geometry,
+                    {
+                        style:{
+                            weight:8,
+                            opacity:.9
+                        }
+                    }
+                )
+                .addTo(map);
+
+
+            map.fitBounds(
+                routeLine.getBounds(),
+                {
+                    padding:[30,30]
+                }
+            );
+
+
+            return;
+
+        }
+
+    }
+
+    catch(e) {
+
+        console.warn(e);
+
+    }
+
+
+    const latlngs =
+        coordinates.map(
+            p =>
+                [p.lat,p.lon]
+        );
+
+
+    routeFallbackLine =
+        L.polyline(
+            latlngs,
+            {
+                weight:7,
+                dashArray:"12 8",
+                opacity:.9
+            }
+        )
+        .addTo(map);
+
+
+    map.fitBounds(
+        routeFallbackLine.getBounds(),
+        {
+            padding:[30,30]
+        }
+    );
+
+}
+
+
+async function updateDashboard() {
+
+
+    try {
+
+
+        const response =
+            await fetch(
+                "/api/state?nocache="+
+                Date.now(),
+                {
+                    cache:"no-store"
+                }
+            );
+
+
+        if(!response.ok)
+            throw new Error(
+                "API error"
+            );
+
+
+        const data =
+            await response.json();
+
+
+        document.getElementById(
+            "connectionText"
+        ).textContent =
+            "API CONNECTED";
+
+
+        const info =
+            getEmergencyInfo(data);
+
+
+        const active =
+            !!info.source &&
+            (
+                data.status ===
+                "EMERGENCY_RECEIVED" ||
+
+                data.status ===
+                "ACCIDENT_DETECTED"
+            );
+
+
+
+
+        if(
+            info.source &&
+            info.source !==
+            lastEmergencySource
+        ) {
+
+            calculationStart =
+                Date.now();
+
+            lastEmergencySource =
+                info.source;
+
+            lastRouteKey = "";
+
+        }
+
+
+        if(!info.source) {
+
+            lastEmergencySource =
+                null;
+
+        }
+
+
+
+        const card =
+            document.getElementById(
+                "emergencyCard"
+            );
+
+
+        const status =
+            document.getElementById(
+                "emergencyStatus"
+            );
+
+
+        if(active) {
+
+            card.classList.add(
+                "active"
+            );
+
+
+            status.textContent =
+                data.status ===
+                "ACCIDENT_DETECTED"
+
+                    ? "⚠️ REROUTING"
+
+                    : "🚨 EMERGENCY ACTIVE";
+
+        }
+
+        else {
+
+            card.classList.remove(
+                "active"
+            );
+
+            status.textContent =
+                "Waiting for emergency";
+
+        }
+
+
+        document.getElementById(
+            "source"
+        ).textContent =
+            info.source || "—";
+
+
+        document.getElementById(
+            "house"
+        ).textContent =
+            info.houseName;
+
+
+        document.getElementById(
+            "ambulance"
+        ).textContent =
+            data.selected_ambulance ||
+            "A1";
+
+
+        document.getElementById(
+            "hospital"
+        ).textContent =
+            info.hospitalName;
+
+
+        updateCalculationEngine(
+            active
+        );
+
+
+
+
+        updateTrafficUI(
+            data,
+            info.junctions
+        );
+
+
+        updateTimings(
+            data,
+            info.junctions
+        );
+
+
+        updateJunctionTable(
+            data
+        );
+
+
+
+        updateRouteUI(
+            info
+        );
+
+
+
+        const distance =
+            calculateRouteDistance(
+                info.route
+            );
+
+
+        document.getElementById(
+            "routeDistance"
+        ).textContent =
+
+            distance > 0
+
+                ? distance.toFixed(2)
+                    + " km"
+
+                : "—";
+
+
+        if(distance > 0) {
+
+            const minutes =
+                Math.max(
+                    1,
+                    Math.round(
+                        distance / 30 * 60
+                    )
+                );
+
+
+            document.getElementById(
+                "eta"
+            ).textContent =
+                minutes + " min";
+
+        }
+
+        else {
+
+            document.getElementById(
+                "eta"
+            ).textContent =
+                "—";
+
+        }
+
+
+
+
+        let total = 0;
+
+
+        info.junctions
+        .forEach(j => {
+
+            total +=
+                calculateTraffic(
+                    data.junctions?.[j]
+                ).score;
+
+        });
+
+
+        const average =
+
+            info.junctions.length
+
+                ? total /
+                  info.junctions.length
+
+                : 0;
+
+
+        const overall =
+
+            average >= 70
+                ? "HIGH"
+                : average >= 40
+                    ? "MEDIUM"
+                    : "LOW";
+
+
+        document.getElementById(
+            "overallTraffic"
+        ).textContent =
+            overall;
+
+
+        document.getElementById(
+            "corridorStatus"
+        ).textContent =
+
+            active
+
+                ? (
+                    Date.now() -
+                    calculationStart >
+                    4000
+
+                    ? "GREEN CORRIDOR READY"
+
+                    : "CALCULATING..."
+                  )
+
+                : "Standby";
+
+
+
+        document.getElementById(
+            "systemStatus"
+        ).textContent =
+
+            data.status ||
+            "READY";
+
+
+        document.getElementById(
+            "selectedAmbulance"
+        ).textContent =
+
+            data.selected_ambulance ||
+            "A1";
+
+
+        document.getElementById(
+            "selectedHospital"
+        ).textContent =
+
+            info.hospitalName;
+
+
+        document.getElementById(
+            "blocked"
+        ).textContent =
+
+            data.blocked &&
+            data.blocked.length
+
+                ? data.blocked.join(", ")
+
+                : "None";
+
+
+        const history =
+            data.event_history || [];
+
+
+        document.getElementById(
+            "feed"
+        ).innerHTML =
+
+            history.length
+
+                ? history
+                    .slice()
+                    .reverse()
+                    .map(
+                        e =>
+                            `<div class="event">
+
+                                <span class="eventTime">
+                                    ${e.time}
+                                </span>
+
+                                ${e.message}
+
+                             </div>`
+                    )
+                    .join("")
+
+                : "Waiting for physical events...";
+
+
+
+        updateMarkers(
+            data,
+            info
+        );
+
+
+        if(active) {
+
+            await drawRoute(
+                info
+            );
+
+        }
+
+
+
+    }
+
+    catch(error) {
+
+
+        console.error(
+            "Dashboard error:",
+            error
+        );
+
+
+        document.getElementById(
+            "connectionText"
+        ).textContent =
+            "API ERROR";
+
+
+        document.getElementById(
+            "connection"
+        ).classList.add(
+            "offline"
+        );
+
+    }
+
+}
+
+
+initMap();
+
+loadMapData();
+
+updateDashboard();
+
+
+setInterval(
+
+    updateDashboard,
+
+    1000
+
+);
+
+</script>
+
+
+</body>
+
+</html>
